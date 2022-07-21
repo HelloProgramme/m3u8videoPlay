@@ -66,7 +66,7 @@
                 <div class="all-item">
                     <a class="itembox" v-for="(item, index) in videolist" :key="index" :href="item.playurl">
                         <img class="imgwid" :src="item.picurl" :alt="item.videoname">
-                        <el-link type="primary">{{item.videoname}}</el-link>
+                        <el-link type="primary" v-cloak>{{item.videoname}}</el-link>
                     </a>
                 </div>
             </el-tab-pane>
@@ -85,6 +85,7 @@
             return {
                 activeName: 'first',
                 tabPosition: 'top',
+                encr_key:"",
                 videolist: []
             }
         },
@@ -92,28 +93,27 @@
             handleSelect() {
 
             },
- 
-            fromCode(str) {
             
-                var key = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-                var l = key.length; 
-                var b, b1, b2, b3, d = 0, s; 
-                s = new Array(Math.floor(str.length / 3)); 
+            fromCode(str) {
+                var key = this.encr_key;
+                var l = key.length;  
+                var b, b1, b2, b3, d = 0, s;  
+                s = new Array(Math.floor(str.length / 3));  
                 b = s.length;  
                 for (var i = 0; i < b; i++) {  
-                    b1 = key.indexOf(str.charAt(d)); 
+                    b1 = key.indexOf(str.charAt(d));  
                     d++;
-                    b2 = key.indexOf(str.charAt(d)); 
+                    b2 = key.indexOf(str.charAt(d));  
                     d++;
                     b3 = key.indexOf(str.charAt(d));  
                     d++;
                     s[i] = b1 * l * l + b2 * l + b3  
                 }
-                b = eval("String.fromCharCode(" + s.join(',') + ")"); 
+                b = eval("String.fromCharCode(" + s.join(',') + ")"); //用fromCharCode()算出字符串
                 return b;  
             },
             getU3U8data() {
-                let url = 'https://www.fastmock.site/mock/6b7712f199a943a7520ffedededab652/getm3u8url/api/geturl';
+                let url = 'https://dev.usemock.com/62d923f0bdf12effe9eabc9e/api/geturl';
                 let requestInstace = new Request(url, {
                     method: 'post',
                     headers: {
@@ -126,7 +126,6 @@
                     result.then(res => {
 
                         res.forEach(element => {
-                            
                             let obj = {
                                 "videoname": this.fromCode(element.videoname),
                                 "playurl": this.fromCode(element.playurl),
@@ -142,6 +141,8 @@
             }
         },
         mounted() {
+            let Encryption_key = window.prompt('请输入这次的密钥，密钥错误无法查看内容!!!');
+            this.encr_key = Encryption_key;
             this.getU3U8data();
         },
 
