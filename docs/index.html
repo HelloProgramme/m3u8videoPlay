@@ -67,7 +67,7 @@
                 <div class="all-item">
                     <a class="itembox" v-for="(item, index) in videolist" :key="index" :href="item.playurl">
                         <img class="imgwid" :src="item.picurl" :alt="item.videoname">
-                        <el-link type="primary" v-cloak>{{item.videoname}}</el-link>
+                        <el-link type="primary" v-text="item.videoname"></el-link>
                     </a>
                 </div>
             </el-tab-pane>
@@ -108,7 +108,43 @@
             },
 
             getU3U8data() {
-                let url = 'https://dev.usemock.com/62d923f0bdf12effe9eabc9e/api/geturl';
+
+                let pagedata = window.sessionStorage.getItem('pagedata');
+                if (pagedata == null) {
+                    let url = 'https://dev.usemock.com/62d923f0bdf12effe9eabc9e/api/geturl';
+                    let requestInstace = new Request(url, {
+                        method: 'post',
+                        headers: {
+                            'Content-Type': 'application/json;charset=utf-8'
+                        },
+                    });
+
+                    fetch(requestInstace).then(response => {
+                        let result = response.json();
+                        result.then(res => {
+                            res.forEach(element => {
+                                let obj = {
+                                    "videoname": this.fromCode(element.videoname),
+                                    "playurl": this.fromCode(element.playurl),
+                                    "picurl": this.fromCode(element.picurl)
+                                };
+                                this.videolist.push(obj);
+                            });
+
+                        }).then(res => {
+                            console.log(this.videolist);
+                            window.sessionStorage.setItem('pagedata', JSON.stringify(this.videolist));
+                        })
+                    })
+                }
+                else {
+                    this.videolist = JSON.parse(window.sessionStorage.getItem('pagedata'))
+                }
+
+            },
+
+            getopendoorpwd(opendoorpwd) {
+                let url = 'https://www.fastmock.site/mock/6b7712f199a943a7520ffedededab652/getm3u8url/api/getdoorpwd';
                 let requestInstace = new Request(url, {
                     method: 'post',
                     headers: {
@@ -119,26 +155,37 @@
                 fetch(requestInstace).then(response => {
                     let result = response.json();
                     result.then(res => {
+                        if (res[0]['pwd'] == opendoorpwd) {
+                            window.sessionStorage.setItem('opendoorpwd', opendoorpwd);
 
-                        res.forEach(element => {
-                            let obj = {
-                                "videoname": this.fromCode(element.videoname),
-                                "playurl": this.fromCode(element.playurl),
-                                "picurl": this.fromCode(element.picurl)
-                            };
-                            this.videolist.push(obj);
-                        });
+                            let Encryption_key = window.prompt('请输入解码密钥🙂');
+                            this.encr_key = Encryption_key;
+                            this.getU3U8data();
+                        }
+                        else {
+                            confirm('暗号错误❌')
+                        }
 
                     }).then(res => {
-                        console.log(this.videolist);
+
                     })
                 })
-            }
+
+
+            },
         },
         mounted() {
-            let Encryption_key = window.prompt('请输入这次的密钥🙂');
-            this.encr_key = Encryption_key;
-            this.getU3U8data();
+
+            var localopendoorpwd = window.sessionStorage.getItem('opendoorpwd');
+
+            if (localopendoorpwd == null) {
+
+                let opendoorpwd = window.prompt('访问暗号是?🤔');
+                this.getopendoorpwd(opendoorpwd);
+            }
+            else {
+                this.getopendoorpwd(localopendoorpwd);
+            }
         },
 
     })
